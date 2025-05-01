@@ -9,6 +9,8 @@ import investmentManager from './investmentManager';
 import liaison from './liaison';
 import projectManager from './projectManager';
 import socialMediaManager from './socialMediaManager';
+import { scbProvider } from './scb/provider';
+import { scbDirectiveAction } from './scb/action';
 
 /**
  * Checks if all required environment variables for an agent are available
@@ -153,6 +155,26 @@ if (filteredOutCount > 0) {
     );
   }
 }
+
+// After availableAgents computed, inject provider/action globally
+availableAgents.forEach((ag: any) => {
+  // Ensure provider/action arrays exist (used by docs tooling etc.)
+  ag.providers = [...(ag.providers ?? []), scbProvider];
+  ag.actions = [...(ag.actions ?? []), scbDirectiveAction];
+
+  // --- Wrap original init so that runtime registers provider/action ---
+  const originalInit = ag.init?.bind(ag);
+  ag.init = async (runtime: any, ...args: any[]) => {
+    // Register SCB bridge capabilities
+    runtime.registerProvider(scbProvider);
+    runtime.registerAction(scbDirectiveAction);
+
+    // Call original init if it exists
+    if (originalInit) {
+      await originalInit(runtime, ...args);
+    }
+  };
+});
 
 export const project = {
   agents: availableAgents,
