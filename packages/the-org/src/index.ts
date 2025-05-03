@@ -9,6 +9,7 @@ import investmentManager from './investmentManager';
 import liaison from './liaison';
 import projectManager from './projectManager';
 import socialMediaManager from './socialMediaManager';
+import vtuberTeam from './vtuber';
 import { scbProvider } from './scb/provider';
 import { scbDirectiveAction } from './scb/action';
 
@@ -18,8 +19,13 @@ import { scbDirectiveAction } from './scb/action';
  * @returns boolean indicating if all required environment variables are set
  */
 function hasRequiredEnvVars(agent: any): boolean {
+  // ---- START DEBUG ----
+  const agentName = agent?.character?.name || 'UnknownAgent';
+  console.log(`[DEBUG] Checking env vars for agent: ${agentName}`);
+  // ---- END DEBUG ----
+
   if (!agent?.character?.settings?.secrets) {
-    logger.warn('Agent missing required settings.secrets configuration');
+    logger.warn(`Agent ${agentName} missing required settings.secrets configuration`);
     return false;
   }
 
@@ -38,16 +44,22 @@ function hasRequiredEnvVars(agent: any): boolean {
       // Check if it's an environment variable reference or direct value
       if (secrets.DISCORD_APPLICATION_ID.startsWith('process.env.')) {
         const envVarName = secrets.DISCORD_APPLICATION_ID.replace('process.env.', '');
-        if (!process.env[envVarName]) {
+        // ---- START DEBUG ----
+        const envVarValue = process.env[envVarName];
+        console.log(
+          `[DEBUG] Agent ${agentName}: Checking DISCORD_APPLICATION_ID (${envVarName}). Value: '${envVarValue}'`
+        );
+        // ---- END DEBUG ----
+        if (!envVarValue) {
           missingVars.push(envVarName);
           discordConfigured = false;
         }
       } else {
         // If it's a direct value, it's already available
-        logger.debug(`Agent "${agent.character.name}" has direct Discord Application ID value`);
+        logger.debug(`Agent "${agentName}" has direct Discord Application ID value`);
       }
     } else {
-      logger.warn(`Agent "${agent.character.name}" missing DISCORD_APPLICATION_ID configuration`);
+      logger.warn(`Agent "${agentName}" missing DISCORD_APPLICATION_ID configuration`);
       discordConfigured = false;
     }
 
@@ -56,16 +68,22 @@ function hasRequiredEnvVars(agent: any): boolean {
       // Check if it's an environment variable reference or direct value
       if (secrets.DISCORD_API_TOKEN.startsWith('process.env.')) {
         const envVarName = secrets.DISCORD_API_TOKEN.replace('process.env.', '');
-        if (!process.env[envVarName]) {
+        // ---- START DEBUG ----
+        const envVarValue = process.env[envVarName];
+        console.log(
+          `[DEBUG] Agent ${agentName}: Checking DISCORD_API_TOKEN (${envVarName}). Value: '${envVarValue}'`
+        );
+        // ---- END DEBUG ----
+        if (!envVarValue) {
           missingVars.push(envVarName);
           discordConfigured = false;
         }
       } else {
         // If it's a direct value, it's already available
-        logger.debug(`Agent "${agent.character.name}" has direct Discord API Token value`);
+        logger.debug(`Agent "${agentName}" has direct Discord API Token value`);
       }
     } else {
-      logger.warn(`Agent "${agent.character.name}" missing DISCORD_API_TOKEN configuration`);
+      logger.warn(`Agent "${agentName}" missing DISCORD_API_TOKEN configuration`);
       discordConfigured = false;
     }
 
@@ -85,16 +103,22 @@ function hasRequiredEnvVars(agent: any): boolean {
       // Check if it's an environment variable reference or direct value
       if (secrets.TELEGRAM_BOT_TOKEN.startsWith('process.env.')) {
         const envVarName = secrets.TELEGRAM_BOT_TOKEN.replace('process.env.', '');
-        if (!process.env[envVarName]) {
+        // ---- START DEBUG ----
+        const envVarValue = process.env[envVarName];
+        console.log(
+          `[DEBUG] Agent ${agentName}: Checking TELEGRAM_BOT_TOKEN (${envVarName}). Value: '${envVarValue}'`
+        );
+        // ---- END DEBUG ----
+        if (!envVarValue) {
           missingVars.push(envVarName);
           telegramConfigured = false;
         }
       } else {
         // If it's a direct value, it's already available
-        logger.debug(`Agent "${agent.character.name}" has direct Telegram Bot Token value`);
+        logger.debug(`Agent "${agentName}" has direct Telegram Bot Token value`);
       }
     } else {
-      logger.warn(`Agent "${agent.character.name}" missing TELEGRAM_BOT_TOKEN configuration`);
+      logger.warn(`Agent "${agentName}" missing TELEGRAM_BOT_TOKEN configuration`);
       telegramConfigured = false;
     }
 
@@ -107,41 +131,73 @@ function hasRequiredEnvVars(agent: any): boolean {
   // If we weren't checking any communication platforms, let the agent pass
   // This handles agents that don't use Discord or Telegram
   if (!checkingPlatforms) {
-    logger.info(
-      `Agent "${agent.character.name}" doesn't require Discord or Telegram configuration`
-    );
+    logger.info(`Agent "${agentName}" doesn't require Discord or Telegram configuration`);
     return true;
   }
 
   // If we checked platforms but none were properly configured, log the missing variables
   if (checkingPlatforms && !hasRequiredPlatform) {
+    // ---- START DEBUG ----
+    console.log(
+      `[DEBUG] Agent ${agentName}: FAILED check. checkingPlatforms=${checkingPlatforms}, hasRequiredPlatform=${hasRequiredPlatform}, missingVars=${missingVars.join(', ')}`
+    );
+    // ---- END DEBUG ----
     if (missingVars.length > 0) {
       logger.warn(
-        `Agent "${agent.character.name}" disabled due to missing environment variables: ${missingVars.join(', ')}`
+        `Agent "${agentName}" disabled due to missing environment variables: ${missingVars.join(', ')}`
       );
     } else {
-      logger.warn(`Agent "${agent.character.name}" disabled due to incomplete configuration`);
+      logger.warn(`Agent "${agentName}" disabled due to incomplete configuration`);
     }
     return false;
   }
 
   // If at least one platform is configured, the agent can run
-  logger.debug(`Agent "${agent.character.name}" enabled with all required environment variables`);
+  // ---- START DEBUG ----
+  console.log(`[DEBUG] Agent ${agentName}: PASSED check.`);
+  // ---- END DEBUG ----
+  logger.debug(`Agent "${agentName}" enabled with all required environment variables`);
   return true;
 }
 
 // Filter agents based on available environment variables
-const availableAgents = [
+const allDefinedAgents = [
+  ...vtuberTeam,
   devRel,
   communityManager,
   investmentManager,
   liaison,
   projectManager,
   socialMediaManager,
-].filter(hasRequiredEnvVars);
+];
+
+// ---- START DEBUG ----
+console.log(
+  '[DEBUG] allDefinedAgents contains (names):',
+  allDefinedAgents.map((a) => {
+    // Attempt to access name, handle potential variations in object structure
+    if (a && typeof a === 'object') {
+      if (
+        'character' in a &&
+        a.character &&
+        typeof a.character === 'object' &&
+        'name' in a.character
+      ) {
+        return a.character.name;
+      } else if ('name' in a) {
+        // Fallback if name is directly on the object (less likely for agents)
+        return a.name;
+      }
+    }
+    return 'InvalidOrUnknownAgentObject';
+  })
+);
+// ---- END DEBUG ----
+
+const availableAgents = allDefinedAgents.filter(hasRequiredEnvVars);
 
 // Log the filtering results for clarity
-const totalAgents = 6; // Total number of agents defined
+const totalAgents = allDefinedAgents.length;
 const filteredOutCount = totalAgents - availableAgents.length;
 if (filteredOutCount > 0) {
   if (filteredOutCount === totalAgents) {
