@@ -63,7 +63,7 @@ export async function init(runtime: IAgentRuntime): Promise<void> {
       await fetch(`${baseUrl}/scb/event`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ type: 'speech', actor: 'vtuber', text }),
+        body: JSON.stringify({ type: 'speech', actor: 'cognitive feedback', text }),
       });
     } catch (err: any) {
       logger.warn('[Narrator] Failed to log speech to SCB', err?.message ?? err);
