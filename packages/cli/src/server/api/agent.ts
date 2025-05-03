@@ -1239,6 +1239,20 @@ export function agentRouter(
     const channelType = req.body.channelType;
 
     try {
+      // Ensure the sender entity exists before proceeding
+      await runtime.ensureConnection({
+        entityId: entityId,
+        roomId: roomId, // Use the provided room ID
+        userName: `User-${entityId.slice(0, 5)}`, // Generic username
+        name: `User ${entityId.slice(0, 5)}`, // Generic name
+        source: source || 'api', // Use provided source or default
+        type: channelType || ChannelType.API, // Use provided type or default
+        channelId: roomId, // Assuming channelId is same as roomId for API
+        serverId: 'api-server', // Generic serverId for API interactions
+        // worldId: undefined, // Optional: Provide if relevant
+        userId: entityId, // Pass the entityId as userId too
+      });
+
       const messageId = createUniqueUuid(runtime, Date.now().toString());
 
       const content: Content = {
