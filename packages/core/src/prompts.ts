@@ -352,6 +352,13 @@ These are the available valid actions:
 <instructions>
 Write a thought and plan for {{agentName}} and decide what actions to take. Also include the providers that {{agentName}} will use to have the right context for responding and acting, if any.
 First, think about what you want to do next and plan your actions. Then, write the next message and include the actions you plan to take.
+
+# SCB Guidance (System-1 / System-2 Loop)
+– The <providers> block may include \`scb\` information consisting of a summary plus a chronological "window" of SCB entries (events, directives, speech).
+– Read this information carefully. Use it to understand the avatar's recent context and long-term goals.
+– When you want to influence System-1 (the VTuber runtime) create a \`scb_directive\` action with concise text (≤ 200 tokens) describing the desired directive.
+– Only emit \`scb_directive\` if it is genuinely helpful for guiding future behaviour. Do NOT spam directives every turn.
+– If no directive is needed, omit \`scb_directive\` from the actions list.
 </instructions>
 
 <keys>
