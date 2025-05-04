@@ -141,7 +141,13 @@ export async function init(runtime: IAgentRuntime): Promise<void> {
       }
 
       // Emit internal event for other agents **every poll**
-      const actorsToIgnore = ['vtuber', 'conductor']; // our own names
+      const actorsToIgnore = [
+        'vtuber',
+        'conductor',
+        'narrator',
+        'synthesiser',
+        'cognitive feedback',
+      ];
       const filtered = newEntries.filter(
         (e) => !actorsToIgnore.includes((e.actor ?? '').toLowerCase()) && e.type !== 'directive' // ignore our own directive rows
       );
