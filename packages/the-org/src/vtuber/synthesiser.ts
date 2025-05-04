@@ -80,7 +80,7 @@ Based on the above, provide your concise insight bundle:
       temperature: 0.3,
       maxTokens: 256,
     });
-    logger.info(`[Synthesiser] Generated Insight: ${insight.substring(0, 100)}...`);
+    logger.info(`[Synthesiser] FULL Insight => ${insight}`);
     return insight;
   };
 
