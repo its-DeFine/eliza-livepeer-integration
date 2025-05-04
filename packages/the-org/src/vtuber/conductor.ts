@@ -67,7 +67,7 @@ export async function init(runtime: IAgentRuntime): Promise<void> {
         headers,
         body: JSON.stringify({ actor: 'conductor', text: directive, ttl: 15 }),
       });
-      logger.info('[Conductor] Posted directive to SCB');
+      logger.info(`[Conductor] Posted directive to SCB: ${directive}`);
     } catch (err: any) {
       logger.error('[Conductor] Failed to post directive', err?.message ?? err);
     }
@@ -145,6 +145,7 @@ export async function init(runtime: IAgentRuntime): Promise<void> {
         'vtuber',
         'conductor',
         'narrator',
+        'summarizer',
         'synthesiser',
         'cognitive feedback',
       ];
@@ -184,10 +185,10 @@ export async function init(runtime: IAgentRuntime): Promise<void> {
   });
 
   vtuberBus.on(VTuberEvents.NARRATION_READY, async (payload: any) => {
-    const { text } = payload;
-    // Example simple heuristic: write directive echoing narration length
-    const directive = `narration_length=${text.length}`;
-    await postDirective(directive);
+    const { feedback } = payload;
+    if (!feedback) return;
+    // Forward summarizer feedback directly as directive to System-1
+    await postDirective(feedback);
   });
 }
 
